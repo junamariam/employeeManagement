@@ -60,23 +60,9 @@ getEmployees();
 document
   .getElementById("addEmployeeBtn")
   .addEventListener("click", async () => {
-    const container = document.getElementById("modalContainer");
-
-    if (!document.getElementById("modalWindow")) {
-      const response = await fetch("modal.html");
-      const html = await response.text();
-      container.innerHTML = html;
-
-      setTimeout(() => {
-        const modalEl = document.getElementById("modalWindow");
-        const modal = new bootstrap.Modal(modalEl);
-        modal.show();
-      }, 0);
-    } else {
-      const modalEl = document.getElementById("modalWindow");
-      const modal = new bootstrap.Modal(modalEl);
-      modal.show();
-    }
+    const modalEl = document.getElementById("modalWindow");
+    const modal = new bootstrap.Modal(modalEl);
+    modal.show();
   });
 
 //Submit button functionality
@@ -121,20 +107,19 @@ document.addEventListener("submit", async (event) => {
     }
   }
 });
+const cancelBtn = document.getElementById("cancel-btn");
+cancelBtn.addEventListener("click", async (event) => {
+  if (event.target && event.target.id === "cancel-btn") {
+    const form = document.getElementById("employeeForm");
+    form.reset();
+  }
+});
 //Vertical eclipse functionality
 document.getElementById("tbody").addEventListener("click", (event) => {
   const target = event.target;
   const employeeId = target.getAttribute("data-id");
   if (target.classList.contains("edit-btn")) {
     console.log("Edit button clicked", employeeId);
-
-
-
-
-
-
-
-    
   }
   if (target.classList.contains("details-btn")) {
     console.log("details button clicked", employeeId);
