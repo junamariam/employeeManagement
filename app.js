@@ -120,11 +120,42 @@ document.getElementById("tbody").addEventListener("click", (event) => {
   const employeeId = target.getAttribute("data-id");
   if (target.classList.contains("edit-btn")) {
     console.log("Edit button clicked", employeeId);
+    fetch(`http://localhost:3000/employees/${employeeId}`)
+      .then((response) => response.json())
+      .then((employee) => {
+        document.getElementById("firstName").value = employee.firstName;
+        console.log(document.getElementById("firstName").value);
+        document.getElementById("lastName").value = employee.lastName;
+        document.getElementById("email").value = employee.email;
+        document.getElementById("mobileNumber").value = employee.phone;
+        //document.getElementById("dob").value = employee.dob;
+        document.getElementById("qualifications").value =
+          employee.qualifications;
+        document.getElementById("address").value = employee.address;
+        document.getElementById("city").value = employee.city;
+        document.getElementById("state").value = employee.state;
+        document.getElementById("country").value = employee.country;
+        document.getElementById("userName").value = employee.username;
+        document.getElementById("password").value = employee.password;
+
+        const modalEl = document.getElementById("modalWindow");
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      });
   }
   if (target.classList.contains("details-btn")) {
     console.log("details button clicked", employeeId);
   }
   if (target.classList.contains("delete-btn")) {
-    alert("delete button clicked", employeeId);
+    fetch(`http://localhost:3000/employees/${employeeId}`, {
+      method: "delete",
+    }).then((res) => {
+      if (res.ok) {
+        alert("Employee Deeted");
+        getEmployees();
+      } else {
+        alert("Failed to deete the employee");
+      }
+    });
   }
 });
