@@ -17,8 +17,6 @@ async function getEmployees() {
 const renderEmployees = (data) => {
   let tableBody = document.getElementById("tbody");
   let rows = " ";
-  // for (let i = 0; i < data.length; i++) {
-  //   let employee = data[i];
   data.forEach((employee, index) => {
     rows += `<tr>
         <td>${index + 1}</td>
@@ -71,15 +69,15 @@ document.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const form = event.target;
-    const formattedDob = formattedDate(form.dob.value);
-    console.log(formattedDob);
-    const data = {
+
+    // 👉 Step 1: Collect all text fields as JSON
+    const newEmployee = {
       salutation: form.salutation.value,
       firstName: form.firstName.value,
       lastName: form.lastName.value,
       email: form.email.value,
       phone: form.phone.value,
-      dob: formattedDob,
+
       gender: form.gender.value,
       qualifications: form.qualifications.value,
       address: form.address.value,
@@ -88,25 +86,56 @@ document.addEventListener("submit", async (event) => {
       country: form.country.value,
       username: form.userName.value,
       password: form.password.value,
+      dob: formattedDate(form.dob.value),
     };
 
     try {
+      // 👉 Step 2: First POST request: Save text fields (JSON)
       const res = await fetch("http://localhost:3000/employees", {
         method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newEmployee),
       });
-      console.log(JSON.stringify(data));
-      console.log("Status:", res.status);
+
       if (res.ok) {
-        alert("Employee Registered");
+        const savedEmployee = await res.json(); // Get newly created employee object with ID
+        const employeeId = savedEmployee.id;
+
+        // 👉 Step 3: Now check if user uploaded an image
+        const imgUpload = document.getElementById("imgUpload");
+        if (imgUpload && imgUpload.files.length > 0) {
+          const formData = new FormData();
+          formData.append("avatar", imgUpload.files[0]);
+
+          const imageRes = await fetch(
+            `http://localhost:3000/employees/${employeeId}/avatar`,
+            {
+              method: "POST",
+              body: formData,
+            }
+          );
+
+          if (imageRes.ok) {
+            alert("Employee registered with image!");
+          } else {
+            alert("Employee saved, but image upload failed.");
+          }
+        } else {
+          alert("Employee registered (no image uploaded).");
+        }
+
         form.reset();
-      } else alert("Registration failed");
+      } else {
+        alert("Failed to register employee.");
+      }
     } catch (error) {
-      console.error("Failed", error);
+      console.error("Registration failed:", error);
     }
   }
 });
+
 const cancelBtn = document.getElementById("cancel-btn");
 cancelBtn.addEventListener("click", async (event) => {
   if (event.target && event.target.id === "cancel-btn") {
@@ -128,7 +157,7 @@ document.getElementById("tbody").addEventListener("click", (event) => {
         document.getElementById("lastName").value = employee.lastName;
         document.getElementById("email").value = employee.email;
         document.getElementById("mobileNumber").value = employee.phone;
-        //document.getElementById("dob").value = employee.dob;
+        document.getElementById("dob").value = employee.dob;
         document.getElementById("qualifications").value =
           employee.qualifications;
         document.getElementById("address").value = employee.address;
@@ -137,25 +166,78 @@ document.getElementById("tbody").addEventListener("click", (event) => {
         document.getElementById("country").value = employee.country;
         document.getElementById("userName").value = employee.username;
         document.getElementById("password").value = employee.password;
-
+        document.getElementById(
+          "employeeAvatar1"
+        ).src = `http://localhost:3000/employees/${employeeId}/avatar`;
+        document.getElementById("employeeId").value = employee.id;
         const modalEl = document.getElementById("modalWindow");
         const modal = new bootstrap.Modal(modalEl);
         modal.show();
       });
-  }
-  if (target.classList.contains("details-btn")) {
-    console.log("details button clicked", employeeId);
-  }
-  if (target.classList.contains("delete-btn")) {
-    fetch(`http://localhost:3000/employees/${employeeId}`, {
-      method: "delete",
-    }).then((res) => {
-      if (res.ok) {
-        alert("Employee Deeted");
-        getEmployees();
-      } else {
-        alert("Failed to deete the employee");
+    document.getElementById("imgUpload").addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const avatarImg = document.getElementById("employeeAvatar1");
+          avatarImg.src = e.target.result;
+          avatarImg.style.display = "block";
+        };
+        reader.readAsDataURL(file);
       }
     });
+  }
+
+  if (target.classList.contains("details-btn")) {
+    fetch(`http://localhost:3000/employees/${employeeId}`)
+      .then((res) => res.json())
+      .then((employee) => {
+        document.getElementById(
+          "name1"
+        ).innerText = `${employee.salutation} ${employee.firstName} ${employee.lastName} `;
+        document.getElementById("email1").innerText = `${employee.email}`;
+        //document.getElementById("age1").value = employee.age;
+        document.getElementById("gender1").value = employee.gender;
+        document.getElementById("dob1").value = employee.dob;
+        document.getElementById("qualification1").value =
+          employee.qualifications;
+        document.getElementById("address1").value = employee.address;
+        document.getElementById("username1").value = employee.username;
+        document.getElementById(
+          "employeeAvatar"
+        ).src = `http://localhost:3000/employees/${employeeId}/avatar`;
+        //Age calculation
+        const splittedDob = employee.dob.split("-");
+        const year = parseInt(splittedDob[2]);
+        const month = parseInt(splittedDob[1]) - 1;
+        const day = parseInt(splittedDob[0]);
+        const dateOfBirth = new Date(year, month, day);
+        const today = new Date();
+
+        const age = today.getFullYear() - dateOfBirth.getFullYear();
+        const m = today.getMonth() - dateOfBirth.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dateOfBirth.getDate())) {
+          age--;
+        }
+        document.getElementById("age1").value = age;
+
+        const modalElmnt = document.getElementById("viewModal");
+        const modali = new bootstrap.Modal(modalElmnt);
+        modali.show();
+      });
+  }
+  if (target.classList.contains("delete-btn")) {
+    if (confirm("Are you sure you want to delete this employee?")) {
+      fetch(`http://localhost:3000/employees/${employeeId}`, {
+        method: "delete",
+      }).then((res) => {
+        if (res.ok) {
+          alert("Employee Deleted");
+          getEmployees();
+        } else {
+          alert("Failed to deete the employee");
+        }
+      });
+    }
   }
 });
