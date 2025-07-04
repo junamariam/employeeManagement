@@ -91,13 +91,19 @@ document.addEventListener("submit", async (event) => {
 
     try {
       // 👉 Step 2: First POST request: Save text fields (JSON)
-      const res = await fetch("http://localhost:3000/employees", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newEmployee),
-      });
+      const employeeId = form.employeeId ? form.employeeId.value : null;
+      const res = await fetch(
+        employeeId
+          ? `http://localhost:3000/employees/${employeeId}`
+          : "http://localhost:3000/employees",
+        {
+          method: employeeId ? "PUT" : "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(newEmployee),
+        }
+      );
 
       if (res.ok) {
         const savedEmployee = await res.json(); // Get newly created employee object with ID
@@ -196,7 +202,6 @@ document.getElementById("tbody").addEventListener("click", (event) => {
           "name1"
         ).innerText = `${employee.salutation} ${employee.firstName} ${employee.lastName} `;
         document.getElementById("email1").innerText = `${employee.email}`;
-        //document.getElementById("age1").value = employee.age;
         document.getElementById("gender1").value = employee.gender;
         document.getElementById("dob1").value = employee.dob;
         document.getElementById("qualification1").value =
