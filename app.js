@@ -172,9 +172,20 @@ document.getElementById("tbody").addEventListener("click", (event) => {
         document.getElementById("country").value = employee.country;
         document.getElementById("userName").value = employee.username;
         document.getElementById("password").value = employee.password;
-        document.getElementById(
-          "employeeAvatar1"
-        ).src = `http://localhost:3000/employees/${employeeId}/avatar`;
+        const avatarImg = document.getElementById("employeeAvatar1");
+        const avatarUrl = `http://localhost:3000/employees/${employeeId}/avatar`;
+        fetch(avatarUrl)
+          .then((response) => {
+            const contentType = response.headers.get("Content-Type");
+            if (response.ok && contentType && contentType.startsWith("image")) {
+              avatarImg.src = avatarUrl;
+            } else {
+              avatarImg.src = "avatar.png";
+            }
+          })
+          .catch(() => {
+            avatarImg.src = "avatar.png";
+          });
         document.getElementById("employeeId").value = employee.id;
         const modalEl = document.getElementById("modalWindow");
         const modal = new bootstrap.Modal(modalEl);
